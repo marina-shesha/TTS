@@ -1,5 +1,6 @@
 import torch
 from torch import nn
+from dacite import from_dict
 from dataclasses import dataclass
 from hw_tts.model.mask import get_non_pad_mask, get_attn_key_pad_mask, get_mask_from_lengths
 from hw_tts.model.modules import FFTBlock, LengthRegulator
@@ -146,7 +147,7 @@ class FastSpeech(nn.Module):
 
     def __init__(self, model_config):
         super(FastSpeech, self).__init__()
-        self.model_config = FastSpeechConfig()
+        self.model_config = from_dict(data_class=FastSpeechConfig, data=model_config)
         self.encoder = Encoder(self.model_config)
         self.length_regulator = LengthRegulator(self.model_config)
         self.decoder = Decoder(self.model_config)
