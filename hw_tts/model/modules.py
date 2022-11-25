@@ -107,16 +107,16 @@ class MultiHeadAttention(nn.Module):
 class PositionwiseFeedForward(nn.Module):
     ''' A two-feed-forward-layer module '''
 
-    def __init__(self, d_in, d_hid, fft_conv1d_kernel, dropout=0.1):
+    def __init__(self, d_in, d_hid, fft_conv1d_kernel, fft_conv1d_padding, dropout=0.1):
         super().__init__()
 
         # Use Conv1D
         # position-wise
         self.w_1 = nn.Conv1d(
-            d_in, d_hid, kernel_size=fft_conv1d_kernel[0], padding=(fft_conv1d_kernel[0] - 1) // 2)
+            d_in, d_hid, kernel_size=fft_conv1d_kernel[0], padding=fft_conv1d_padding[0])
         # position-wise
         self.w_2 = nn.Conv1d(
-            d_hid, d_in, kernel_size=fft_conv1d_kernel[1], padding=(fft_conv1d_kernel[1] - 1) // 2)
+            d_hid, d_in, kernel_size=fft_conv1d_kernel[1], padding=fft_conv1d_padding[1])
 
         #self.layer_norm = nn.LayerNorm(d_in)
         self.dropout = nn.Dropout(dropout)
@@ -141,12 +141,14 @@ class FFTBlock(torch.nn.Module):
                  n_head,
                  d_k,
                  d_v,
+                 fft_conv1d_kernel,
+                 fft_conv1d_padding,
                  dropout=0.1):
         super(FFTBlock, self).__init__()
         self.slf_attn = MultiHeadAttention(
             n_head, d_model, d_k, d_v, dropout=dropout)
         self.pos_ffn = PositionwiseFeedForward(
-            d_model, d_inner, dropout=dropout)
+            d_model, d_inner,  fft_conv1d_kernel, fft_conv1d_padding, dropout=dropout)
         self.attn_norm = nn.LayerNorm(d_model)
         self.pos_norm = nn.LayerNorm(d_model)
 
