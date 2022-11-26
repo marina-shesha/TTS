@@ -57,7 +57,7 @@ def main(config, out_file):
             "You can not improve your past, but you can improve your future. Once time is wasted, life is wasted.",
             "Death comes to all, but great achievements raise a monument which shall endure until the sun grows old."
         ]
-        data_list = list(text_to_sequence(test, config.text_cleaners) for test in tests)
+        data_list = list(text_to_sequence(test, ['english_cleaners']) for test in tests)
 
         return data_list
 
@@ -68,8 +68,8 @@ def main(config, out_file):
         text = np.stack([text])
         src_pos = np.array([i + 1 for i in range(text.shape[1])])
         src_pos = np.stack([src_pos])
-        sequence = torch.from_numpy(text).long().to(config.device)
-        src_pos = torch.from_numpy(src_pos).long().to(config.device)
+        sequence = torch.from_numpy(text).long().to(device)
+        src_pos = torch.from_numpy(src_pos).long().to(device)
 
         with torch.no_grad():
             mel = model.forward(sequence, src_pos, alpha=alpha)
