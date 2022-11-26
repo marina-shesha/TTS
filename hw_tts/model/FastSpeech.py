@@ -44,9 +44,9 @@ class FastSpeechConfig:
 class FastSpeech(nn.Module):
     """ FastSpeech """
 
-    def __init__(self, model_config):
+    def __init__(self, model_config=FastSpeechConfig):
         super(FastSpeech, self).__init__()
-        self.model_config = from_dict(data_class=FastSpeechConfig, data=model_config)
+        self.model_config = model_config
         self.encoder = Encoder(self.model_config)
         self.length_regulator = LengthRegulator(self.model_config)
         self.decoder = Decoder(self.model_config)

@@ -4,7 +4,6 @@
     "arch": {
         "type": "FastSpeech",
         "args": {
-            "model_config": {}
         }
     },
     "dataset": {
