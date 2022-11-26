@@ -2,7 +2,7 @@ import torch.nn.functional as F
 import numpy as np
 import torch
 from torch import nn
-from hw_tts.model.mask import get_non_pad_mask, get_attn_key_pad_mask
+from .mask import get_non_pad_mask, get_attn_key_pad_mask
 
 
 class ScaledDotProductAttention(nn.Module):

@@ -1,1 +1,1 @@
-from hw_tts.alignment.alignment import *
+from .alignment import *

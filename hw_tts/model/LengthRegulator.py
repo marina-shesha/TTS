@@ -1,5 +1,5 @@
 import torch.nn.functional as F
-from hw_tts.alignment.alignment import create_alignment
+from ..alignment.alignment import create_alignment
 import torch
 from torch import nn
 

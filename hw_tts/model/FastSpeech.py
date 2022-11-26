@@ -2,9 +2,9 @@ import torch
 from torch import nn
 from dacite import from_dict
 from dataclasses import dataclass
-from hw_tts.model.mask import get_mask_from_lengths
-from hw_tts.model.LengthRegulator import LengthRegulator
-from hw_tts.model.modules import Encoder, Decoder
+from .mask import get_mask_from_lengths
+from .LengthRegulator import LengthRegulator
+from .modules import Encoder, Decoder
 
 @dataclass
 class FastSpeechConfig:
