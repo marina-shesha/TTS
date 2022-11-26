@@ -29,7 +29,7 @@ class Trainer(BaseTrainer):
         self.train_dataloader = data_loader
         if len_epoch is None:
             # epoch-based training
-            self.len_epoch = len(self.train_dataloader)
+            self.len_epoch = len(self.train_dataloader) * data_loader.batch_expand_size
         else:
             # iteration-based training
             self.train_dataloader = inf_loop(self.train_dataloader)
@@ -59,7 +59,7 @@ class Trainer(BaseTrainer):
         self.writer.add_scalar("epoch", epoch)
         batch_idx = 0
         for batch in tqdm(self.train_dataloader):
-            for db in batch:
+            for db in tqdm(batch):
                 batch_idx += 1
 
                 character = db["text"].long().to(self.device)
@@ -90,8 +90,7 @@ class Trainer(BaseTrainer):
 
                 total_loss.backward()
 
-                if self.grad_clip_thresh:
-                    nn.utils.clip_grad_norm_(self.model.parameters(), self.grad_clip_thresh)
+                self._clip_grad_norm()
 
                 self.optimizer.step()
                 self.optimizer.zero_grad(set_to_none=True)
