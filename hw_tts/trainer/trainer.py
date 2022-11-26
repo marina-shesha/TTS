@@ -58,8 +58,8 @@ class Trainer(BaseTrainer):
         self.train_metrics.reset()
         self.writer.add_scalar("epoch", epoch)
         batch_idx = 0
-        for batch_idx, batch in enumerate(tqdm(self.train_dataloader, desc="train", total=self.len_epoch)):
-            for db in enumerate(batch):
+        for batch in tqdm(self.train_dataloader, desc="train", total=self.len_epoch):
+            for db in batch:
                 batch_idx += 1
 
                 character = db["text"].long().to(self.device)
@@ -110,11 +110,13 @@ class Trainer(BaseTrainer):
                     self._log_scalars(self.train_metrics)
                     # we don't want to reset train metrics at the start of every epoch
                     # because we are interested in recent train metrics
+                    last_train_metrics = self.train_metrics.result()
+                    self.train_metrics.reset()
 
-                if batch_idx >= self.len_epoch:
-                    break
-        log = self.train_metrics.result()
+            if batch_idx >= self.len_epoch:
+                break
 
+        log = last_train_metrics
         return log
 
     def _progress(self, batch_idx):
