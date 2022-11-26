@@ -12,10 +12,10 @@ from hw_tts.trainer import Trainer
 from hw_tts.utils import ROOT_PATH
 import hw_tts.datasets as data
 from hw_tts.utils.parse_config import ConfigParser
-from ..text import text_to_sequence
-import ..audio
-import ..waveglow
-import ..utils
+from .text import text_to_sequence
+import .audio
+import .waveglow
+import .utils
 
 DEFAULT_CHECKPOINT_PATH = ROOT_PATH / "default_test_model" / "checkpoint.pth"
 
