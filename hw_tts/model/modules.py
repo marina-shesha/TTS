@@ -195,8 +195,8 @@ class Encoder(nn.Module):
         enc_slf_attn_list = []
 
         # -- Prepare masks
-        slf_attn_mask = get_attn_key_pad_mask(seq_k=src_seq, seq_q=src_seq)
-        non_pad_mask = get_non_pad_mask(src_seq)
+        slf_attn_mask = get_attn_key_pad_mask(seq_k=src_seq, seq_q=src_seq, PAD=self.model_config.PAD)
+        non_pad_mask = get_non_pad_mask(src_seq, PAD=self.model_config.PAD)
 
         # -- Forward
         enc_output = self.src_word_emb(src_seq) + self.position_enc(src_pos)
@@ -246,8 +246,8 @@ class Decoder(nn.Module):
         dec_slf_attn_list = []
 
         # -- Prepare masks
-        slf_attn_mask = get_attn_key_pad_mask(seq_k=enc_pos, seq_q=enc_pos)
-        non_pad_mask = get_non_pad_mask(enc_pos)
+        slf_attn_mask = get_attn_key_pad_mask(seq_k=enc_pos, seq_q=enc_pos, PAD=self.model_config.PAD)
+        non_pad_mask = get_non_pad_mask(enc_pos, PAD=self.model_config.PAD)
 
         # -- Forward
         dec_output = enc_seq + self.position_enc(enc_pos)
