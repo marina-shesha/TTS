@@ -168,7 +168,7 @@ class Trainer(BaseTrainer):
             with torch.no_grad():
                 mel = model.forward(sequence, src_pos, length_alpha=alpha)
             return mel[0].cpu().transpose(0, 1), mel.contiguous().transpose(1, 2)
-
+        files = []
         for speed in [0.8, 1., 1.3]:
             for i, phn in tqdm(enumerate(data_list)):
                 mel, mel_cuda = synthesis(self.model, phn, speed)
@@ -177,11 +177,10 @@ class Trainer(BaseTrainer):
                     mel_cuda, WaveGlow,
                     f"results/s={speed}_{i}_waveglow.wav"
                 )
-        i = 0
         for f in os.listdir('results'):
             wav, sr = torchaudio.load(os.path.join('results', f))
-            self._log_audio(i, torch.tensor(wav), sr)
-            i += 1
+            self._log_audio(f, torch.tensor(wav), sr)
+
 
     def _progress(self, batch_idx):
         base = "[{}/{} ({:.0f}%)]"

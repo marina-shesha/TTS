@@ -60,14 +60,15 @@ def get_data_to_buffer(config=MelSpectrogramConfig):
 
         pitch, t = pw.dio(wav.numpy(), config.sr,  frame_period=config.hop_length / config.sr * 1000)
         pitch = pw.stonemask(wav.numpy(), pitch, t, config.sr)
-        idx = np.where(pitch == 0)[0]
-        pitch[idx] = np.interp(idx, ~idx, pitch[~idx])
+        idx = (pitch == 0)
+        not_zero_idx = (pitch != 0)
+        pitch[idx] = np.interp(np.argwhere(idx).squeeze(), np.argwhere(not_zero_idx).squeeze(), pitch[not_zero_idx])
+        pitch = torch.tensor(pitch)
         spectrogram = to_spec_trans(wav)
         energy = torch.norm(spectrogram, p=2, dim=0)
         mel_target = to_mel_trans(spectrogram.float())
         mel_target = torch.log(torch.clamp(mel_target, min=1e-5))
         mel_target = mel_target.transpose(-1, -2)
-        pitch = torch.tensor(pitch)
         buffer.append({"text": character, "duration": duration, 'pitch': pitch,
                        "energy": energy, "mel_target": mel_target})
 
