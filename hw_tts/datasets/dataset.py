@@ -62,7 +62,7 @@ def get_data_to_buffer(config=MelSpectrogramConfig):
         spectrogram = to_spec_trans(wav)
         energy = torch.norm(spectrogram, p='fro', dim=1)
         mel_target = to_mel_trans(spectrogram.float())
-        # mel_target = mel_target.transpose(-1, -2)
+        #mel_target = mel_target.transpose(-1, -2)
         pitch = torch.tensor(pitch)
         buffer.append({"text": character, "duration": duration, 'pitch': pitch,
                        "energy": energy, "mel_target": mel_target})
