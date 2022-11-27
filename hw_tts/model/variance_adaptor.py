@@ -95,8 +95,7 @@ class LengthRegulatorlog(nn.Module):
         else:
             duration_predictor_output = torch.clamp(
                 (torch.round(torch.exp(log_duration_predictor_output) - 1) * alpha),
-                min=0,
-            )
+                min=0).int()
             output = self.LR(x, duration_predictor_output)
 
             mel_pos = torch.stack(

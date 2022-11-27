@@ -39,9 +39,9 @@ def process_text(train_text_path):
 def get_data_to_buffer(config=MelSpectrogramConfig):
     buffer = list()
     text = process_text(config.data_path)
-    to_spec_trans = Spectrogram(n_fft=config.num_fft, win_length=config.win_length, hop_length=config.hop_length)
+    to_spec_trans = Spectrogram(n_fft=config.num_fft, win_length=config.win_length, hop_length=config.hop_length, power = 1)
     to_mel_trans = MelScale(n_mels=config.num_mels, sample_rate=config.sr,
-                            f_min=config.mel_fmin, f_max=config.mel_fmax, n_stft=config.num_fft // 2 + 1)
+                            f_min=config.mel_fmin, f_max=config.mel_fmax, n_stft=config.num_fft // 2 + 1, norm='slaney', mel_scale='slaney')
     wavs_name = sorted(list(map(lambda x: x[2:-4], os.listdir(config.wav_path))))
     start = time.perf_counter()
     for i in tqdm(range(len(text))):
@@ -56,11 +56,11 @@ def get_data_to_buffer(config=MelSpectrogramConfig):
         wav, sr = torchaudio.load(os.path.join(
             config.wav_path, f"LJ{wavs_name[i]}.wav"
         ))
-        wav = wav.squeeze().double()
+        wav = wav.squeeze().to(torch.float64)
         pitch, t = pw.dio(wav.numpy(), config.sr,  frame_period=config.hop_length / config.sr * 1000)
         pitch = pw.stonemask(wav.numpy(), pitch, t, config.sr)
         spectrogram = to_spec_trans(wav)
-        energy = torch.norm(spectrogram, p='fro', dim=0)
+        energy = torch.norm(spectrogram, p=2, dim=0)
         mel_target = to_mel_trans(spectrogram.float())
         mel_target = torch.log(torch.clamp(mel_target, min=1e-5))
         mel_target = mel_target.transpose(-1, -2)
