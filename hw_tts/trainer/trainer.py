@@ -177,9 +177,11 @@ class Trainer(BaseTrainer):
                     mel_cuda, WaveGlow,
                     f"results/s={speed}_{i}_waveglow.wav"
                 )
+        i = 0
         for f in os.listdir('results'):
             wav, sr = torchaudio.load(os.path.join('results', f))
-            self._log_audio(torch.tensor(wav), sr)
+            self._log_audio(i, torch.tensor(wav), sr)
+            i += 1
 
     def _progress(self, batch_idx):
         base = "[{}/{} ({:.0f}%)]"
@@ -213,5 +215,5 @@ class Trainer(BaseTrainer):
         for metric_name in metric_tracker.keys():
             self.writer.add_scalar(f"{metric_name}", metric_tracker.avg(metric_name))
 
-    def _log_audio(self, audio, sr):
-        self.writer.add_audio("audio", audio, sample_rate=sr)
+    def _log_audio(self, name, audio, sr):
+        self.writer.add_audio(f"audio{name}", audio, sample_rate=sr)
