@@ -2,7 +2,6 @@ import torch.nn.functional as F
 from ..alignment.alignment import create_alignment
 import torch
 from torch import nn
-from .length_regulator import LengthRegulator
 import numpy as np
 
 
@@ -128,8 +127,10 @@ class VarianceAdaptor(nn.Module):
             model_config.n_bins, model_config.encoder_dim
         )
 
-    def forward(self, x, duration_target=None, pitch_target=None, energy_target=None,
-                alpha_duration=1.0, alpha_pitch=1.0, alpha_energy=1.0, mel_max_length=None, mask=None):
+    def forward(self, x,
+                duration_target=None, pitch_target=None, energy_target=None,
+                alpha_duration=1.0, alpha_pitch=1.0, alpha_energy=1.0,
+                mel_max_length=None, mask=None):
 
         x, log_duration_prediction = self.length_regulator(x, alpha_duration, duration_target, mel_max_length)
         pitch_prediction = self.pitch_predictor(x)

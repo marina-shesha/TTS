@@ -66,14 +66,14 @@ class FastSpeech2(nn.Module):
 
     def forward(self, src_seq, src_pos, mel_pos=None, mel_max_length=None,
                 length_target=None, pitch_target=None, energy_target=None,
-                length_alpha=1.0, energy_alpha=1.0, pitch_alpha=1.0):
+                length_alpha=1.0, pitch_alpha=1.0, energy_alpha=1.0):
         x, non_pad_mask = self.encoder(src_seq, src_pos)
 
         if self.training:
             mask = (mel_pos == 0)
             output, log_duration_output, pitch_output, energy_output = self.variance_adaptor(
                 x,  length_target, pitch_target, energy_target,
-                length_alpha, energy_alpha, pitch_alpha, mel_max_length, mask)
+                length_alpha, pitch_alpha, energy_alpha, mel_max_length, mask)
             output = self.decoder(output, mel_pos)
             output = self.mask_tensor(output, mel_pos, mel_max_length)
             output = self.mel_linear(output)
@@ -81,7 +81,7 @@ class FastSpeech2(nn.Module):
         else:
             output, mel_pos, pitch_output, energy_output = self.variance_adaptor(
                 x,  length_target, pitch_target, energy_target,
-                length_alpha, energy_alpha, pitch_alpha, mel_max_length)
+                length_alpha, pitch_alpha, energy_alpha, mel_max_length)
             output = self.decoder(output, mel_pos)
             output = self.mel_linear(output)
             return output

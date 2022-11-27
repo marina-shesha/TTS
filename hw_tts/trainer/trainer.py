@@ -134,6 +134,7 @@ class Trainer(BaseTrainer):
                 break
 
         log = last_train_metrics
+        self.evaluation()
 
         return log
 
