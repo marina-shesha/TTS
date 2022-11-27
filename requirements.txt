@@ -6,6 +6,7 @@ tensorboard
 matplotlib
 pandas
 hparams
+pyworld
 
 datasets
 editdistance

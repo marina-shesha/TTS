@@ -56,7 +56,7 @@ def get_data_to_buffer(config=MelSpectrogramConfig):
             config.wav_path, f"LJ{wavs_name[i]}.wav"
         ))
         wav = wav.squeeze().double()
-        pitch, t = pw.dio(wav, config.sr)
+        pitch, t = pw.dio(wav.numpy(), config.sr)
         pitch = pw.stonemask(wav.numpy(), pitch, t, config.sr)
         spectrogram = to_spec_trans(wav)
         energy = torch.norm(spectrogram, p='fro', dim=1)
