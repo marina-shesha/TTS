@@ -41,7 +41,7 @@ class Trainer(BaseTrainer):
             self.train_dataloader = inf_loop(self.train_dataloader)
             self.len_epoch = len_epoch
         self.lr_scheduler = lr_scheduler
-        self.log_step = 300
+        self.log_step = config["trainer"]["log_step"]
 
         self.train_metrics = MetricTracker(
             "loss", "mel_loss", "duration_loss", "pitch_loss", "energy_loss", "grad norm",  writer=self.writer
@@ -64,7 +64,6 @@ class Trainer(BaseTrainer):
         self.train_metrics.reset()
         self.writer.add_scalar("epoch", epoch)
         batch_idx = 0
-        last_train_metrics = self.train_metrics.result()
         for batch in tqdm(self.train_dataloader):
             for db in tqdm(batch):
                 batch_idx += 1
