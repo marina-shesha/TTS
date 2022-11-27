@@ -146,9 +146,9 @@ class Trainer(BaseTrainer):
 
         def get_data():
             tests = [
-                "I remove attention module in decoder and use average pooling to implement predicting r frames at once",
-                "You can not improve your past, but you can improve your future. Once time is wasted, life is wasted.",
-                "Death comes to all, but great achievements raise a monument which shall endure until the sun grows old."
+                "A defibrillator is a device that gives a high energy electric shock to the heart of someone who is in cardiac arrest",
+                "Massachusetts Institute of Technology may be best known for its math, science and engineering education",
+                "Wasserstein distance or Kantorovich Rubinstein metric is a distance function defined between probability distributions on a given metric space"
             ]
             data_list = list(text_to_sequence(test, ['english_cleaners']) for test in tests)
 
@@ -157,7 +157,7 @@ class Trainer(BaseTrainer):
         data_list = get_data()
         os.makedirs("results", exist_ok=True)
 
-        def synthesis(model, text, alpha=1.0):
+        def synthesis(model, text, length_alpha=1.0, pitch_alpha=1.0, energy_alpha=1.0):
             text = np.array(text)
             text = np.stack([text])
             src_pos = np.array([i + 1 for i in range(text.shape[1])])
@@ -166,21 +166,36 @@ class Trainer(BaseTrainer):
             src_pos = torch.from_numpy(src_pos).long().to(self.device)
 
             with torch.no_grad():
-                mel = model.forward(sequence, src_pos, length_alpha=alpha)
-            return mel[0].cpu().transpose(0, 1), mel.contiguous().transpose(1, 2)
-        files = []
-        for speed in [0.8, 1., 1.3]:
+                mel = model.forward(sequence, src_pos, length_alpha=length_alpha, pitch_alpha=pitch_alpha, energy_alpha=energy_alpha)
+            return mel.contiguous().transpose(1, 2)
+
+        for speed in [0.8, 1., 1.2]:
             for i, phn in tqdm(enumerate(data_list)):
-                mel, mel_cuda = synthesis(self.model, phn, speed)
+                mel_cuda = synthesis(self.model, phn, length_alpha=speed)
 
                 waveglow.inference.inference(
                     mel_cuda, WaveGlow,
-                    f"results/s={speed}_{i}_waveglow.wav"
+                    f"results/l_s={speed}_{i}_waveglow.wav"
+                )
+                mel_cuda = synthesis(self.model, phn, pitch_alpha=speed)
+                waveglow.inference.inference(
+                    mel_cuda, WaveGlow,
+                    f"results/p_s={speed}_{i}_waveglow.wav"
+                )
+                mel_cuda = synthesis(self.model, phn, energy_alpha=speed)
+                waveglow.inference.inference(
+                    mel_cuda, WaveGlow,
+                    f"results/e_s={speed}_{i}_waveglow.wav"
+                )
+
+                mel_cuda = synthesis(self.model, phn, length_alpha=speed, pitch_alpha=speed, energy_alpha=speed)
+                waveglow.inference.inference(
+                    mel_cuda, WaveGlow,
+                    f"results/l+p+e_s={speed}_{i}_waveglow.wav"
                 )
         for f in os.listdir('results'):
             wav, sr = torchaudio.load(os.path.join('results', f))
             self._log_audio(f, torch.tensor(wav), sr)
-
 
     def _progress(self, batch_idx):
         base = "[{}/{} ({:.0f}%)]"

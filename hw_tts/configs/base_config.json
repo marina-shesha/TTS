@@ -13,8 +13,8 @@
     "dataloader": {
         "type": "LJSpeechDataloader",
         "args":{
-            "batch_size": 16,
-            "batch_expand_size": 32,
+            "batch_size": 66,
+            "batch_expand_size": 2,
             "num_workers": 0
         }
     },
@@ -33,20 +33,20 @@
     "lr_scheduler": {
         "type": "OneCycleLR",
         "args": {
-            "steps_per_epoch": 1419,
-            "epochs": 100,
+            "steps_per_epoch": 400,
+            "epochs": 300,
             "anneal_strategy": "cos",
             "max_lr": 1e-3,
             "pct_start": 0.1
         }
     },
     "trainer": {
-        "epochs": 100,
+        "epochs": 300,
         "save_dir": "saved/",
-        "save_period": 5,
+        "save_period": 1000,
         "verbosity": 2,
-        "log_step": 10,
-        "grad_norm_clip": 10,
+        "log_step": 5,
+        "grad_norm_clip": 1.0,
         "monitor": "min val_loss",
         "early_stop": 100,
         "visualize": "wandb",
