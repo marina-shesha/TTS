@@ -64,6 +64,7 @@ class Trainer(BaseTrainer):
         self.train_metrics.reset()
         self.writer.add_scalar("epoch", epoch)
         batch_idx = 0
+        last_train_metrics = self.train_metrics.result()
         for batch in tqdm(self.train_dataloader):
             for db in tqdm(batch):
                 batch_idx += 1
