@@ -138,7 +138,7 @@ class VarianceAdaptor(nn.Module):
             emb_pitch = self.pitch_embedding(torch.bucketize(pitch_target, self.pitch_bins))
             pitch_prediction.masked_fill(mask, 0.0)
         else:
-            pitch_prediction *= alpha_pitch
+            pitch_prediction = pitch_prediction * alpha_pitch
             emb_pitch = self.pitch_embedding(torch.bucketize(pitch_prediction, self.pitch_bins))
         x = x + emb_pitch
 
@@ -147,7 +147,7 @@ class VarianceAdaptor(nn.Module):
             emb_energy = self.energy_embedding(torch.bucketize(energy_target, self.energy_bins))
             energy_prediction.masked_fill(mask, 0.0)
         else:
-            energy_prediction *= alpha_energy
+            energy_prediction = energy_prediction * alpha_energy
             emb_energy = self.energy_embedding(torch.bucketize(energy_prediction, self.energy_bins))
         x = x + emb_energy
 
