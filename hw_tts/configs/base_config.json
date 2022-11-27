@@ -33,7 +33,7 @@
     "lr_scheduler": {
         "type": "OneCycleLR",
         "args": {
-            "steps_per_epoch": 400,
+            "steps_per_epoch": 198,
             "epochs": 300,
             "anneal_strategy": "cos",
             "max_lr": 1e-3,
