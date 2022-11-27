@@ -5,6 +5,7 @@ tqdm
 tensorboard
 matplotlib
 pandas
+hparams
 
 datasets
 editdistance
