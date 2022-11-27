@@ -4,7 +4,13 @@ from torch.nn.utils import clip_grad_norm_
 from tqdm import tqdm
 from hw_tts.base import BaseTrainer
 from hw_tts.utils import inf_loop, MetricTracker
-
+import random
+import numpy as np
+import os
+import torchaudio
+from text import text_to_sequence
+import waveglow
+import utils
 
 class Trainer(BaseTrainer):
     """
@@ -38,7 +44,7 @@ class Trainer(BaseTrainer):
         self.log_step = 300
 
         self.train_metrics = MetricTracker(
-            "loss", "mel_loss", "duration_loss", "grad norm",  writer=self.writer
+            "loss", "mel_loss", "duration_loss", "pitch_loss", "energy_loss", "grad norm",  writer=self.writer
         )
 
     def _clip_grad_norm(self):
@@ -65,28 +71,40 @@ class Trainer(BaseTrainer):
                 character = db["text"].long().to(self.device)
                 mel_target = db["mel_target"].float().to(self.device)
                 duration = db["duration"].int().to(self.device)
+                pitch = db["pitch"].float().to(self.device)
+                energy = db["energy"].float().to(self.device)
                 mel_pos = db["mel_pos"].long().to(self.device)
                 src_pos = db["src_pos"].long().to(self.device)
                 max_mel_len = db["mel_max_len"]
 
-                mel_output, duration_predictor_output = self.model(
+                mel_output, duration_predictor_output, pitch_output, energy_output = self.model(
                     character,
                     src_pos,
                     mel_pos=mel_pos,
                     mel_max_length=max_mel_len,
-                    length_target=duration)
+                    length_target=duration,
+                    pitch_target=pitch,
+                    energy_target=energy
+                )
 
-                mel_loss, duration_loss = self.criterion(
+                mel_loss, duration_loss, pitch_loss, energy_loss = self.criterion(
                     mel_output,
                     duration_predictor_output,
+                    pitch_output,
+                    energy_output,
                     mel_target,
-                    duration)
-                total_loss = mel_loss + duration_loss
+                    duration,
+                    pitch,
+                    energy
+                )
+                total_loss = mel_loss + duration_loss + pitch_loss + energy_loss
 
                 self.train_metrics.update("grad norm", self.get_grad_norm())
                 self.train_metrics.update("loss", total_loss.item())
                 self.train_metrics.update("mel_loss", mel_loss.item())
                 self.train_metrics.update("duration_loss", duration_loss.item())
+                self.train_metrics.update("pitch_loss", pitch_loss.item())
+                self.train_metrics.update("energy_loss", energy_loss.item())
 
                 total_loss.backward()
 
@@ -99,8 +117,8 @@ class Trainer(BaseTrainer):
                 if batch_idx % self.log_step == 0:
                     self.writer.set_step((epoch - 1) * self.len_epoch + batch_idx)
                     self.logger.debug(
-                        "Train Epoch: {} {} Loss: {:.6f} mel loss: {:.6f} duration loss: {:.6f}".format(
-                            epoch, self._progress(batch_idx), total_loss.item(),  mel_loss.item(), duration_loss.item()
+                        "Train Epoch: {} {} Loss: {:.6f} mel loss: {:.6f} duration loss: {:.6f} pitch loss: {:.6f} energy loss: {:.6f}".format(
+                            epoch, self._progress(batch_idx), total_loss.item(),  mel_loss.item(), duration_loss.item(), pitch_loss.item(), energy_loss.item()
                         )
                     )
                     self.writer.add_scalar(
@@ -116,7 +134,51 @@ class Trainer(BaseTrainer):
                 break
 
         log = last_train_metrics
+
         return log
+
+    def evaluation(self):
+        self.model.eval()
+
+        WaveGlow = utils.get_WaveGlow()
+        WaveGlow = WaveGlow.to(self.device)
+
+        def get_data():
+            tests = [
+                "I remove attention module in decoder and use average pooling to implement predicting r frames at once",
+                "You can not improve your past, but you can improve your future. Once time is wasted, life is wasted.",
+                "Death comes to all, but great achievements raise a monument which shall endure until the sun grows old."
+            ]
+            data_list = list(text_to_sequence(test, ['english_cleaners']) for test in tests)
+
+            return data_list
+
+        data_list = get_data()
+        os.makedirs("results", exist_ok=True)
+
+        def synthesis(model, text, alpha=1.0):
+            text = np.array(text)
+            text = np.stack([text])
+            src_pos = np.array([i + 1 for i in range(text.shape[1])])
+            src_pos = np.stack([src_pos])
+            sequence = torch.from_numpy(text).long().to(self.device)
+            src_pos = torch.from_numpy(src_pos).long().to(self.device)
+
+            with torch.no_grad():
+                mel = model.forward(sequence, src_pos, length_alpha=alpha)
+            return mel[0].cpu().transpose(0, 1), mel.contiguous().transpose(1, 2)
+
+        for speed in [0.8, 1., 1.3]:
+            for i, phn in tqdm(enumerate(data_list)):
+                mel, mel_cuda = synthesis(self.model, phn, speed)
+
+                waveglow.inference.inference(
+                    mel_cuda, WaveGlow,
+                    f"results/s={speed}_{i}_waveglow.wav"
+                )
+        for f in os.listdir('results'):
+            wav, sr = torchaudio.load(os.path.join('results', f))
+            self._log_audio(torch.tensor(wav), sr)
 
     def _progress(self, batch_idx):
         base = "[{}/{} ({:.0f}%)]"
@@ -149,3 +211,6 @@ class Trainer(BaseTrainer):
             return
         for metric_name in metric_tracker.keys():
             self.writer.add_scalar(f"{metric_name}", metric_tracker.avg(metric_name))
+
+    def _log_audio(self, audio, sr):
+        self.writer.add_audio("audio", audio, sample_rate=sr)
