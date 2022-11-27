@@ -26,7 +26,7 @@ class FastSpeech2Config:
     fft_conv1d_padding: list = (4, 0)
 
     n_bins = 256
-    pitch_min = 1.0
+    pitch_min = 60.65602775173416
     pitch_max = 861.0652680130653
     energy_min = 0.017866514063265632
     energy_max = 314.96185992067916
