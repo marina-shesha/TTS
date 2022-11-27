@@ -26,10 +26,10 @@ class FastSpeech2Config:
     fft_conv1d_padding: list = (4, 0)
 
     n_bins = 256
-    pitch_min = -2.917079304729967
-    pitch_max = 11.391254536985784
-    energy_min = -1.431044578552246
-    energy_max = 8.184337615966797
+    pitch_min = 1.0
+    pitch_max = 861.0652680130653
+    energy_min = 0.017866514063265632
+    energy_max = 314.96185992067916
 
     variance_predictor_filter_size: int = 256
     variance_predictor_kernel_size: int = 3
