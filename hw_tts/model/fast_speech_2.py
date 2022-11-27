@@ -80,8 +80,7 @@ class FastSpeech2(nn.Module):
             return output, log_duration_output, pitch_output, energy_output
         else:
             output, mel_pos, pitch_output, energy_output = self.variance_adaptor(
-                x,  length_target, pitch_target, energy_target,
-                length_alpha, pitch_alpha, energy_alpha, mel_max_length)
+                x,  length_alpha, pitch_alpha, energy_alpha)
             output = self.decoder(output, mel_pos)
             output = self.mel_linear(output)
             return output
