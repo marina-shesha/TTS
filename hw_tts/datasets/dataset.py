@@ -57,11 +57,12 @@ def get_data_to_buffer(config=MelSpectrogramConfig):
             config.wav_path, f"LJ{wavs_name[i]}.wav"
         ))
         wav = wav.squeeze().double()
-        pitch, t = pw.dio(wav.numpy(), config.sr)
+        pitch, t = pw.dio(wav.numpy(), config.sr,  frame_period=config.hop_length / config.sr * 1000)
         pitch = pw.stonemask(wav.numpy(), pitch, t, config.sr)
         spectrogram = to_spec_trans(wav)
-        energy = torch.norm(spectrogram, p='fro', dim=1)
+        energy = torch.norm(spectrogram, p='fro', dim=0)
         mel_target = to_mel_trans(spectrogram.float())
+        mel_target = torch.log(torch.clamp(mel_target, min=1e-5))
         mel_target = mel_target.transpose(-1, -2)
         pitch = torch.tensor(pitch)
         buffer.append({"text": character, "duration": duration, 'pitch': pitch,
