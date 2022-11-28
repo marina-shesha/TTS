@@ -27,8 +27,8 @@ def main(config, out_file):
     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 
     # setup data_loader instances
-    dataset = config.init_obj(config["dataset"], data)
-    dataloader = config.init_obj(config["dataloader"], data, dataset=dataset)
+    # dataset = config.init_obj(config["dataset"], data)
+    # dataloader = config.init_obj(config["dataloader"], data, dataset=dataset)
 
     # build model architecture
     model = config.init_obj(config["arch"], module_model)
@@ -66,8 +66,8 @@ def main(config, out_file):
         text = np.stack([text])
         src_pos = np.array([i + 1 for i in range(text.shape[1])])
         src_pos = np.stack([src_pos])
-        sequence = torch.from_numpy(text).long().to(self.device)
-        src_pos = torch.from_numpy(src_pos).long().to(self.device)
+        sequence = torch.from_numpy(text).long().to(device)
+        src_pos = torch.from_numpy(src_pos).long().to(device)
 
         with torch.no_grad():
             mel = model.forward(sequence, src_pos, length_alpha=length_alpha, pitch_alpha=pitch_alpha,
