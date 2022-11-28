@@ -50,44 +50,53 @@ def main(config, out_file):
 
     def get_data():
         tests = [
-            "I am very happy to see you again!",
-            "Durian model is a very good speech synthesis!",
-            "When I was twenty, I fell in love with a girl.",
-            "I remove attention module in decoder and use average pooling to implement predicting r frames at once",
-            "You can not improve your past, but you can improve your future. Once time is wasted, life is wasted.",
-            "Death comes to all, but great achievements raise a monument which shall endure until the sun grows old."
+            "A defibrillator is a device that gives a high energy electric shock to the heart of someone who is in cardiac arrest",
+            "Massachusetts Institute of Technology may be best known for its math, science and engineering education",
+            "Wasserstein distance or Kantorovich Rubinstein metric is a distance function defined between probability distributions on a given metric space"
         ]
         data_list = list(text_to_sequence(test, ['english_cleaners']) for test in tests)
 
         return data_list
 
     data_list = get_data()
+    os.makedirs("test_results", exist_ok=True)
 
-    def synthesis(model, text, alpha=1.0):
+    def synthesis(model, text, length_alpha=1.0, pitch_alpha=1.0, energy_alpha=1.0):
         text = np.array(text)
         text = np.stack([text])
         src_pos = np.array([i + 1 for i in range(text.shape[1])])
         src_pos = np.stack([src_pos])
-        sequence = torch.from_numpy(text).long().to(device)
-        src_pos = torch.from_numpy(src_pos).long().to(device)
+        sequence = torch.from_numpy(text).long().to(self.device)
+        src_pos = torch.from_numpy(src_pos).long().to(self.device)
 
         with torch.no_grad():
-            mel = model.forward(sequence, src_pos, alpha=alpha)
-        return mel[0].cpu().transpose(0, 1), mel.contiguous().transpose(1, 2)
+            mel = model.forward(sequence, src_pos, length_alpha=length_alpha, pitch_alpha=pitch_alpha,
+                                energy_alpha=energy_alpha)
+        return mel.contiguous().transpose(1, 2)
 
-    for speed in [0.8, 1., 1.3]:
+    for speed in [0.8, 1., 1.2]:
         for i, phn in tqdm(enumerate(data_list)):
-            mel, mel_cuda = synthesis(model, phn, speed)
-
-            os.makedirs("results", exist_ok=True)
-
-            audio.tools.inv_mel_spec(
-                mel, f"results/s={speed}_{i}.wav"
-            )
+            mel_cuda = synthesis(model, phn, length_alpha=speed)
 
             waveglow.inference.inference(
                 mel_cuda, WaveGlow,
-                f"results/s={speed}_{i}_waveglow.wav"
+                f"test_results/len_s={speed}_{i}_waveglow.wav"
+            )
+            mel_cuda = synthesis(model, phn, pitch_alpha=speed)
+            waveglow.inference.inference(
+                mel_cuda, WaveGlow,
+                f"test_results/pitch_s={speed}_{i}_waveglow.wav"
+            )
+            mel_cuda = synthesis(model, phn, energy_alpha=speed)
+            waveglow.inference.inference(
+                mel_cuda, WaveGlow,
+                f"test_results/energy_s={speed}_{i}_waveglow.wav"
+            )
+
+            mel_cuda = synthesis(model, phn, length_alpha=speed, pitch_alpha=speed, energy_alpha=speed)
+            waveglow.inference.inference(
+                mel_cuda, WaveGlow,
+                f"test_results/len+pitch+energy_s={speed}_{i}_waveglow.wav"
             )
 
 
