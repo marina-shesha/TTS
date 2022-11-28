@@ -52,12 +52,14 @@ We might have to install the following code so that cuda doesn't fail.
 ```
 
 ## Training
+
 Run train.py with base_config.json
 
 ```shell
 %run -i TTS/train.py --config TTS/hw_tts/configs/base_config.json
 ```
 ## Test 
+
 Download checkpount and config
 
 ```shell
