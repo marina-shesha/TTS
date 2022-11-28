@@ -82,4 +82,6 @@ from IPython import display
 display.display(display.Audio(audio_path))
 ```
 for visualization audio.
+
+
 You can see usage of this this instruction in ```fastspeech2.ipynb```
